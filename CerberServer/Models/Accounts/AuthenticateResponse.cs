@@ -1,0 +1,18 @@
+﻿using System.Text.Json.Serialization;
+
+namespace CerberServer.Models.Accounts
+{
+    public class AuthenticateResponse
+    {
+        public int Id { get; set; }
+        public string FirstName { get; set; }
+        public string LastName { get; set; }
+        public string Email { get; set; }
+        public byte[] Picture { get; set; }
+        public long OrganisationId { get; set; }
+        public string OrganisationName { get; set; }
+        public bool IsOperator { get; set; }
+        public bool IsAdmin { get; set; }
+        public string RefreshToken { get; set; }
+    }
+}

@@ -5,13 +5,14 @@ using System.Collections.Generic;
 
 namespace CerberServer.Data
 {
-    public partial class Operator
+    public partial class RefreshToken
     {
         public long Id { get; set; }
         public long UserId { get; set; }
-        public long OrganisationId { get; set; }
+        public string Token { get; set; }
+        public DateTime Expires { get; set; }
+        public bool IsActive { get; set; }
 
-        public virtual Organisation Organisation { get; set; }
         public virtual User User { get; set; }
     }
 }
