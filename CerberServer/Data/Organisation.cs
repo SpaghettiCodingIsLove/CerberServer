@@ -9,7 +9,6 @@ namespace CerberServer.Data
     {
         public Organisation()
         {
-            Operators = new HashSet<Operator>();
             Users = new HashSet<User>();
         }
 
@@ -19,7 +18,6 @@ namespace CerberServer.Data
         public string Logo { get; set; }
         public bool Active { get; set; }
 
-        public virtual ICollection<Operator> Operators { get; set; }
         public virtual ICollection<User> Users { get; set; }
     }
 }
