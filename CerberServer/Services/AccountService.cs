@@ -56,6 +56,7 @@ namespace CerberServer.Services
 
             AuthenticateResponse response = _mapper.Map<AuthenticateResponse>(account);
             response.RefreshToken = refreshToken.Token;
+            response.Image = Convert.ToBase64String(File.ReadAllBytes(@$"C:\ProgramData\CerberServer\Images\{account.Image}.png"));
             return response;
         }
 
