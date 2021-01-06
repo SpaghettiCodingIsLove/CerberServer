@@ -7,6 +7,7 @@ using Microsoft.IdentityModel.Tokens;
 using System;
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
+using System.IO;
 using System.Linq;
 using System.Security.Claims;
 using System.Security.Cryptography;
@@ -55,6 +56,7 @@ namespace CerberServer.Services
 
             AuthenticateResponse response = _mapper.Map<AuthenticateResponse>(account);
             response.RefreshToken = refreshToken.Token;
+            response.Image = Convert.ToBase64String(File.ReadAllBytes(@$"C:\ProgramData\CerberServer\Images\{account.Image}.png"));
             return response;
         }
 
@@ -112,7 +114,18 @@ namespace CerberServer.Services
             account.Password = BC.HashPassword(model.Password);
 
             // save account
-            account.Image = "";
+            if (!Directory.Exists(@"C:\ProgramData\CerberServer\Images"))
+            {
+                Directory.CreateDirectory(@"C:\ProgramData\CerberServer\Images");
+            }
+
+            string file = RandomString(20);
+            while (_context.Users.Any(x => x.Image.Equals(file)))
+            {
+                file = RandomString(20);
+            }
+            File.WriteAllBytes(@$"C:\ProgramData\CerberServer\Images\{file}.png", Convert.FromBase64String(model.ImageArray));
+            account.Image = file;
             account.Login = "";
             _context.Users.Add(account);
             _context.SaveChanges();
@@ -255,6 +268,22 @@ namespace CerberServer.Services
                 html: $@"<h4>Email Already Registered</h4>
                          <p>Your email <strong>{email}</strong> is already registered.</p>"
             );
+        }
+
+        private string RandomString(int length)
+        {
+
+            string pool = "abcdefghijklmnopqrstuvwxyz0123456789";
+            StringBuilder builder = new StringBuilder();
+            Random random = new Random();
+
+            for (int i = 0; i < length; i++)
+            {
+                char c = pool[random.Next(0, pool.Length)];
+                builder.Append(c);
+            }
+
+            return builder.ToString();
         }
     }
 }
