@@ -35,7 +35,7 @@ namespace CerberServer.Controllers
         [HttpPost("refresh-token")]
         public ActionResult<AuthenticateResponse> RefreshToken(ExtendTokenRequest extendToken)
         {
-            var response = _accountService.RefreshToken(extendToken.Token);
+            var response = _accountService.RefreshToken(extendToken.Token, extendToken.Id);
             return Ok(response);
         }
 
@@ -48,7 +48,7 @@ namespace CerberServer.Controllers
             if (string.IsNullOrEmpty(token))
                 return BadRequest(new { message = "Token is required" });
 
-            _accountService.RevokeToken(token);
+            _accountService.RevokeToken(token, model.Id);
             return Ok(new { message = "Token revoked" });
         }
 
@@ -101,17 +101,17 @@ namespace CerberServer.Controllers
             return Ok(new { message = "Account deleted successfully" });
         }
 
-        [HttpGet("{id:int}")]
-        public ActionResult<List<UserResponse>> GetUsersInOrganisation(int id)
+        [HttpGet("get-users")]
+        public ActionResult<List<UserResponse>> GetUsersInOrganisation(string token, long id)
         {
-            List<UserResponse> userRespnses = _accountService.GetUsersInOrganisation(id);
+            List<UserResponse> userRespnses = _accountService.GetUsersInOrganisation(token, id);
             return Ok(userRespnses);
         }
 
-        [HttpGet("{id:int}")]
-        public ActionResult<OrganisationResponse> GetOrganisation(int id)
+        [HttpGet("get-organisation")]
+        public ActionResult<OrganisationResponse> GetOrganisation(string token, long id)
         {
-            OrganisationResponse organisation = _accountService.GetOrganisation(id);
+            OrganisationResponse organisation = _accountService.GetOrganisation(token, id);
             return Ok(organisation);
         }
 
