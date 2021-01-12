@@ -14,6 +14,10 @@ namespace CerberServer.Helpers
 
             CreateMap<RegisterRequest, User>();
 
+            CreateMap<User, UserResponse>();
+
+            CreateMap<Organisation, OrganisationResponse>();
+
             CreateMap<UpdateRequest, User>()
                 .ForAllMembers(x => x.Condition(
                     (src, dest, prop) =>

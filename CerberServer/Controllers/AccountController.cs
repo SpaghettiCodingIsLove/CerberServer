@@ -100,5 +100,26 @@ namespace CerberServer.Controllers
             _accountService.Delete(id);
             return Ok(new { message = "Account deleted successfully" });
         }
+
+        [HttpGet("{id:int}")]
+        public ActionResult<List<UserResponse>> GetUsersInOrganisation(int id)
+        {
+            List<UserResponse> userRespnses = _accountService.GetUsersInOrganisation(id);
+            return Ok(userRespnses);
+        }
+
+        [HttpGet("{id:int}")]
+        public ActionResult<OrganisationResponse> GetOrganisation(int id)
+        {
+            OrganisationResponse organisation = _accountService.GetOrganisation(id);
+            return Ok(organisation);
+        }
+
+        [HttpPost("join-organisation")]
+        public IActionResult JoinOrganisation(JoinOrganisationRequest model)
+        {
+            _accountService.JoinOrganisation(model);
+            return Ok(new { message = "Joined organisation" });
+        }
     }
 }

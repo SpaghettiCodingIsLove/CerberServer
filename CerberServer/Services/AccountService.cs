@@ -192,6 +192,80 @@ namespace CerberServer.Services
                 throw new AppException("Invalid token");
         }
 
+        public List<UserResponse> GetUsersInOrganisation(int id)
+        {
+            User user = _context.Users.FirstOrDefault(x => x.Id == id);
+
+            if (!user.IsOperator)
+            {
+                throw new AppException("User is not operator");
+            }
+
+            if (user.OrganisationId.HasValue)
+            {
+                List<User> usersInOrganisation = _context.Users.Where(x => x.OrganisationId == user.OrganisationId.Value).ToList();
+                List<RefreshToken> refreshTokens = _context.RefreshTokens.Where(x => usersInOrganisation.Select(x => x.Id).Contains(x.UserId) && x.IsActive && x.Expires >= DateTime.UtcNow).ToList();
+                List<UserResponse> userResponses = new List<UserResponse>();
+
+                foreach(User orgUser in usersInOrganisation)
+                {
+                    UserResponse currUser = new UserResponse();
+                    _mapper.Map(orgUser, currUser);
+
+                    RefreshToken token = refreshTokens.FirstOrDefault(x => x.UserId == user.Id);
+
+                    if (token != null)
+                    {
+                        currUser.Online = true;
+                    }
+                    else
+                    {
+                        currUser.Online = false;
+                    }
+
+                    userResponses.Add(currUser);
+                }
+
+                return userResponses;
+            }
+            else
+            {
+                throw new AppException("User not in organisation");
+            }
+        }
+
+        public OrganisationResponse GetOrganisation(int id)
+        {
+            User user = _context.Users.FirstOrDefault(x => x.Id == id);
+
+            if (user.OrganisationId.HasValue)
+            {
+                Organisation organisation = _context.Organisations.FirstOrDefault(x => x.Id == user.OrganisationId.Value);
+                OrganisationResponse response = new OrganisationResponse();
+                _mapper.Map(organisation, response);
+                return response;
+            }
+            else
+            {
+                throw new AppException("User not in organisation");
+            }
+        }
+
+        public void JoinOrganisation(JoinOrganisationRequest model)
+        {
+            Organisation organisation = _context.Organisations.FirstOrDefault(x => x.OrganisationKey.Equals(model.Key));
+
+            if (organisation != null)
+            {
+                _context.Users.FirstOrDefault(x => x.Id == model.Id).OrganisationId = organisation.Id;
+                _context.SaveChanges();
+            }
+            else
+            {
+                throw new AppException("Wrong key");
+            }
+        }
+
         // helper methods
 
         private User getAccount(int id)

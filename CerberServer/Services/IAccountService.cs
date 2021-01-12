@@ -15,5 +15,8 @@ namespace CerberServer.Services
         AccountResponse GetById(int id);
         AccountResponse Update(int id, UpdateRequest model);
         void Delete(int id);
+        List<UserResponse> GetUsersInOrganisation(int id);
+        OrganisationResponse GetOrganisation(int id);
+        void JoinOrganisation(JoinOrganisationRequest model);
     }
 }
