@@ -57,12 +57,13 @@ namespace CerberServer.Services
             AuthenticateResponse response = _mapper.Map<AuthenticateResponse>(account);
             response.RefreshToken = refreshToken.Token;
             response.Image = Convert.ToBase64String(File.ReadAllBytes(@$"C:\ProgramData\CerberServer\Images\{account.Image}.png"));
+            response.OrganisationName = account.OrganisationId.HasValue ? _context.Organisations.FirstOrDefault(x => x.Id == account.OrganisationId.Value)?.Name : null;
             return response;
         }
 
-        public ExtendTokenResponse RefreshToken(string token)
+        public ExtendTokenResponse RefreshToken(string token, long id)
         {
-            (RefreshToken refreshToken, User account) = getRefreshToken(token);
+            (RefreshToken refreshToken, User account) = getRefreshToken(token, id);
 
             ExtendTokenResponse response;
             if (refreshToken.Expires >= DateTime.UtcNow)
@@ -87,9 +88,9 @@ namespace CerberServer.Services
             return response;
         }
 
-        public void RevokeToken(string token)
+        public void RevokeToken(string token, long Id)
         {
-            (RefreshToken refreshToken, User account) = getRefreshToken(token);
+            (RefreshToken refreshToken, User account) = getRefreshToken(token, Id);
 
             // revoke token and save
             refreshToken.IsActive = false;
@@ -192,8 +193,10 @@ namespace CerberServer.Services
                 throw new AppException("Invalid token");
         }
 
-        public List<UserResponse> GetUsersInOrganisation(int id)
+        public List<UserResponse> GetUsersInOrganisation(string token, long id)
         {
+            ValidateToken(token, id);
+
             User user = _context.Users.FirstOrDefault(x => x.Id == id);
 
             if (!user.IsOperator)
@@ -212,9 +215,9 @@ namespace CerberServer.Services
                     UserResponse currUser = new UserResponse();
                     _mapper.Map(orgUser, currUser);
 
-                    RefreshToken token = refreshTokens.FirstOrDefault(x => x.UserId == user.Id);
+                    RefreshToken rToken = refreshTokens.FirstOrDefault(x => x.UserId == orgUser.Id);
 
-                    if (token != null)
+                    if (rToken != null)
                     {
                         currUser.Online = true;
                     }
@@ -226,6 +229,7 @@ namespace CerberServer.Services
                     userResponses.Add(currUser);
                 }
 
+                userResponses = userResponses.OrderByDescending(x => x.Online).ThenBy(x => x.LastName).ThenBy(x => x.FirstName).ToList();
                 return userResponses;
             }
             else
@@ -234,8 +238,10 @@ namespace CerberServer.Services
             }
         }
 
-        public OrganisationResponse GetOrganisation(int id)
+        public OrganisationResponse GetOrganisation(string token, long id)
         {
+            ValidateToken(token, id);
+
             User user = _context.Users.FirstOrDefault(x => x.Id == id);
 
             if (user.OrganisationId.HasValue)
@@ -253,6 +259,8 @@ namespace CerberServer.Services
 
         public void JoinOrganisation(JoinOrganisationRequest model)
         {
+            ValidateToken(model.Token, model.Id);
+
             Organisation organisation = _context.Organisations.FirstOrDefault(x => x.OrganisationKey.Equals(model.Key));
 
             if (organisation != null)
@@ -275,11 +283,11 @@ namespace CerberServer.Services
             return account;
         }
 
-        private (RefreshToken, User) getRefreshToken(string token)
+        private (RefreshToken, User) getRefreshToken(string token, long id)
         {
-            User account = _context.Users.SingleOrDefault(u => u.RefreshTokens.Any(t => t.Token == token && t.IsActive));
+            User account = _context.Users.SingleOrDefault(u => u.RefreshTokens.Any(t => t.Token == token && t.IsActive) && u.Id == id);
             if (account == null) throw new AppException("Invalid token");
-            RefreshToken refreshToken = _context.RefreshTokens.Single(x => x.Token == token);
+            RefreshToken refreshToken = _context.RefreshTokens.Single(x => x.Token == token && x.UserId == id);
             if (!refreshToken.IsActive) throw new AppException("Invalid token");
             return (refreshToken, account);
         }
@@ -358,6 +366,20 @@ namespace CerberServer.Services
             }
 
             return builder.ToString();
+        }
+
+        private void ValidateToken(string token, long id)
+        {
+            RefreshToken refreshToken = _context.RefreshTokens.FirstOrDefault(x =>
+                x.Token.Equals(token) &&
+                x.Expires >= DateTime.UtcNow &&
+                x.IsActive &&
+                x.UserId == id);
+
+            if (refreshToken == null)
+            {
+                throw new AppException("Invalid token");
+            }
         }
     }
 }

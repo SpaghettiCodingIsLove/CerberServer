@@ -8,6 +8,7 @@ namespace CerberServer.Models.Accounts
     public class JoinOrganisationRequest
     {
         public long Id { get; set; }
+        public string Token { get; set; }
         public string Key { get; set; }
     }
 }

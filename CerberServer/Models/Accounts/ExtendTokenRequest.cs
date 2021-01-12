@@ -6,5 +6,6 @@ namespace CerberServer.Models.Accounts
     {
         [Required]
         public string Token { get; set; }
+        public long Id { get; set; }
     }
 }
