@@ -18,6 +18,6 @@ namespace CerberServer.Models.Accounts
         public string Password { get; set; }
 
         [Required]
-        public string ImageArray { get; set; }
+        public string[] ImageArray { get; set; }
     }
 }

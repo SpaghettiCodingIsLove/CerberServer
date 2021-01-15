@@ -56,7 +56,13 @@ namespace CerberServer.Services
 
             AuthenticateResponse response = _mapper.Map<AuthenticateResponse>(account);
             response.RefreshToken = refreshToken.Token;
-            response.Image = Convert.ToBase64String(File.ReadAllBytes(@$"C:\ProgramData\CerberServer\Images\{account.Image}.png"));
+            List<string> images = new List<string>();
+            DirectoryInfo dir = new DirectoryInfo(@$"C:\ProgramData\CerberServer\Images\{account.Image}");
+            foreach(var file in dir.GetFiles())
+            {
+                images.Add(Convert.ToBase64String(File.ReadAllBytes(file.FullName)));
+            }
+            response.Image = images;
             response.OrganisationName = account.OrganisationId.HasValue ? _context.Organisations.FirstOrDefault(x => x.Id == account.OrganisationId.Value)?.Name : null;
             return response;
         }
@@ -125,7 +131,13 @@ namespace CerberServer.Services
             {
                 file = RandomString(20);
             }
-            File.WriteAllBytes(@$"C:\ProgramData\CerberServer\Images\{file}.png", Convert.FromBase64String(model.ImageArray));
+
+            Directory.CreateDirectory(@$"C:\ProgramData\CerberServer\Images\{file}");
+            for (int i = 0; i < model.ImageArray.Length; i++)
+            {
+                File.WriteAllBytes(@$"C:\ProgramData\CerberServer\Images\{file}\{i}.png", Convert.FromBase64String(model.ImageArray[i]));
+            }
+            
             account.Image = file;
             account.Login = "";
             _context.Users.Add(account);
