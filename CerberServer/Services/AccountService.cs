@@ -57,10 +57,14 @@ namespace CerberServer.Services
             AuthenticateResponse response = _mapper.Map<AuthenticateResponse>(account);
             response.RefreshToken = refreshToken.Token;
             List<string> images = new List<string>();
-            DirectoryInfo dir = new DirectoryInfo(@$"C:\ProgramData\CerberServer\Images\{account.Image}");
-            foreach(var file in dir.GetFiles())
+
+            if (!account.IsOperator)
             {
-                images.Add(Convert.ToBase64String(File.ReadAllBytes(file.FullName)));
+                DirectoryInfo dir = new DirectoryInfo(@$"C:\ProgramData\CerberServer\Images\{account.Image}");
+                foreach (var file in dir.GetFiles())
+                {
+                    images.Add(Convert.ToBase64String(File.ReadAllBytes(file.FullName)));
+                }
             }
             response.Image = images;
             response.OrganisationName = account.OrganisationId.HasValue ? _context.Organisations.FirstOrDefault(x => x.Id == account.OrganisationId.Value)?.Name : null;
